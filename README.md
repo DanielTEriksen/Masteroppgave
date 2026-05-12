@@ -1,1 +1,1 @@
-# Masteroppgave - Samme intensitet, ulik toleranse
+# Masteroppgave
