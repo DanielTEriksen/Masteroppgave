@@ -1,0 +1,84 @@
+---
+title: "Testoversikt"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+
+library(ggplot2)
+
+x_t1 <- 1; x_t2 <- 4; x_t3 <- 7
+
+lbl_kartlegging <- "Kartleggingsdag"
+lbl_laktat      <- "Laktatprofil"
+lbl_2min        <- "2-min"
+lbl_random      <- "Randomisert rekkef\u00f8lge"
+lbl_24t         <- "24 t"
+lbl_belastning  <- "Belastning tilsvarende"
+
+y_header <- 1.18
+y_line2  <- 1.00
+y_line3  <- 0.85
+y_line4  <- 0.70
+
+p <- ggplot() +
+
+  geom_segment(aes(x = 0.4, xend = 7.6, y = 0, yend = 0),
+               linewidth = 0.6, colour = "grey25") +
+
+  geom_segment(aes(x = c(x_t1, x_t2, x_t3),
+                   xend = c(x_t1, x_t2, x_t3),
+                   y = -0.08, yend = 0.08),
+               linewidth = 0.6, colour = "grey25") +
+
+  annotate("text", x = c(x_t1, x_t2, x_t3), y = -0.25,
+           label = c("T1", "T2", "T3"), fontface = "bold", size = 5) +
+
+  annotate("text", x = x_t1, y = y_header,
+           label = lbl_kartlegging, size = 3.4, fontface = "bold") +
+  annotate("text", x = x_t1, y = y_line2, label = lbl_laktat,
+           size = 3.0, colour = "grey15") +
+  annotate("text", x = x_t1, y = y_line3, label = "VO2maks",
+           size = 3.0, colour = "grey15") +
+  annotate("text", x = x_t1, y = y_line4, label = lbl_2min,
+           size = 3.0, colour = "grey15") +
+
+  annotate("text", x = (x_t2 + x_t3)/2, y = y_header,
+           label = lbl_belastning, size = 3.4, fontface = "bold") +
+  annotate("text", x = (x_t2 + x_t3)/2, y = y_line2,
+           label = expression(bold("4 mmol" %.% "L"^-1 ~ "/ 50 % av topplaktat")),
+           size = 3.4, colour = "black") +
+  annotate("text", x = (x_t2 + x_t3)/2, y = 0.78,
+           label = lbl_random, fontface = "italic",
+           size = 3.0, colour = "grey25") +
+
+  geom_segment(aes(x = x_t2, xend = x_t3, y = 0.50, yend = 0.50),
+               linewidth = 0.5, colour = "grey25") +
+  geom_segment(aes(x = c(x_t2, x_t3), xend = c(x_t2, x_t3),
+                   y = 0.50, yend = 0.42),
+               linewidth = 0.5, colour = "grey25") +
+
+  geom_segment(aes(x = c(x_t1 + 0.05, x_t2 + 0.05),
+                   xend = c(x_t2 - 0.05, x_t3 - 0.05),
+                   y = -0.42, yend = -0.42),
+               linewidth = 0.3, colour = "grey60") +
+  annotate("text", x = c((x_t1 + x_t2)/2, (x_t2 + x_t3)/2), y = -0.55,
+           label = lbl_24t, size = 3.0, colour = "grey35") +
+
+  scale_x_continuous(limits = c(0, 8), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(-0.9, 1.5), expand = c(0, 0)) +
+  coord_cartesian(clip = "off") +
+  theme_void() +
+  theme(plot.margin = margin(15, 15, 15, 15))
+
+print(p)
+
+ggsave("testforlop.png", p, width = 11, height = 4.2, dpi = 300, bg = "white")
+ggsave("testforlop.pdf", p, width = 11, height = 4.2)
+
+```
+
+
+
