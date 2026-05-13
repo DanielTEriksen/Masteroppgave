@@ -1,0 +1,161 @@
+---
+title: "Topplaktat, %VO2maks, W/kg og %MAP ved 4mmol vs TTU"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+
+library(tidyverse)
+library(effsize)
+
+df_utfall <- data.frame(
+  FP = 1:17,
+  TTE = c(3600, 2483, 3600, 3600, 2317, 3600, 1937, 3600, 1536,
+          2518, 3600, 1757, 3600, 3600, 3600, 3600, 3600),
+  Topplaktat = c(12.06, 13.41, 17.38, 15.05, 11.01, 13.38, 12.57, 15.14,
+                 13.90, 12.39, 15.57, 10.23, 12.71, 9.60, 18.24, 16.41, 15.97),
+  VO2maks_pst = c(86.5, 84.1, 78.3, 82.1, 89.4, 78.9, 80.3, 80.5, 86.1,
+                  82.9, 83.3, 85.4, 84.1, 81.6, 82.4, 75.9, 80.3)
+)
+
+df_utfall$Gruppe <- ifelse(df_utfall$TTE >= 3600, "Fullforte", "Avbrot")
+df_utfall$Gruppe <- factor(df_utfall$Gruppe, levels = c("Fullforte", "Avbrot"))
+
+deskr <- df_utfall %>%
+  group_by(Gruppe) %>%
+  summarise(
+    n = n(),
+    Topplaktat_mean = mean(Topplaktat),
+    Topplaktat_sd   = sd(Topplaktat),
+    VO2_mean        = mean(VO2maks_pst),
+    VO2_sd          = sd(VO2maks_pst),
+    .groups = "drop"
+  )
+print(deskr)
+
+# Welch's t-test og Cohen's d
+analyser_variabel <- function(variabel, navn) {
+  formula <- as.formula(paste(variabel, "~ Gruppe"))
+  
+  t_res <- t.test(formula, data = df_utfall, var.equal = FALSE)
+  d_res <- cohen.d(formula, data = df_utfall)
+  
+  cat("\n--- ", navn, " ---\n", sep = "")
+  cat(sprintf("Fullf??rt: %.2f ?? %.2f\n",
+              mean(df_utfall[[variabel]][df_utfall$Gruppe == "Fullforte"]),
+              sd(df_utfall[[variabel]][df_utfall$Gruppe == "Fullforte"])))
+  cat(sprintf("Avbr??t:   %.2f ?? %.2f\n",
+              mean(df_utfall[[variabel]][df_utfall$Gruppe == "Avbrot"]),
+              sd(df_utfall[[variabel]][df_utfall$Gruppe == "Avbrot"])))
+  cat(sprintf("t(%.2f) = %.2f, p = %.3f, d = %.2f\n",
+              t_res$parameter,
+              t_res$statistic,
+              t_res$p.value,
+              d_res$estimate))
+}
+
+analyser_variabel("Topplaktat", "Topplaktat fra 2-min")
+analyser_variabel("VO2maks_pst", "%VO2maks ved 4 mmol??L?????")
+
+```
+
+
+```{r}
+
+library(tidyverse)
+library(effsize)
+
+# Data
+df <- data.frame(
+  FP = 1:17,
+  Watt_4mmol = c(325, 365, 270, 325, 305, 330, 270, 330, 255, 240,
+                 225, 340, 315, 205, 220, 270, 280),
+  Vekt_kg = c(77.3, 88.1, 73.5, 72.2, 84.6, 80.2, 68.5, 79.5, 64.0, 55.5,
+              54.2, 80.4, 78.7, 65.1, 52.7, 76.9, 81.4),
+  MAP = c(383, 450, 353, 401, 341, 416, 344, 431, 306, 301,
+          279, 406, 388, 263, 279, 362, 360),
+  Gruppe = c("Fullforte", "Avbrot", "Fullforte", "Fullforte", "Avbrot",
+             "Fullforte", "Avbrot", "Fullforte", "Avbrot", "Avbrot",
+             "Fullforte", "Avbrot", "Fullforte", "Fullforte", "Fullforte",
+             "Fullforte", "Fullforte")
+)
+
+# Beregn watt/kg og % av MAP
+df$Watt_per_kg <- df$Watt_4mmol / df$Vekt_kg
+df$Watt_pct_MAP <- (df$Watt_4mmol / df$MAP) * 100
+
+# Statistikk per gruppe
+df %>%
+  group_by(Gruppe) %>%
+  summarise(
+    n = n(),
+    Watt_mean = mean(Watt_4mmol),
+    Watt_sd = sd(Watt_4mmol),
+    Watt_per_kg_mean = mean(Watt_per_kg),
+    Watt_per_kg_sd = sd(Watt_per_kg),
+    Watt_pct_MAP_mean = mean(Watt_pct_MAP),
+    Watt_pct_MAP_sd = sd(Watt_pct_MAP)
+  ) %>%
+  print(width = Inf)
+
+# Welch's t-test
+cat("\n--- Absolutt watt ---\n")
+t1 <- t.test(Watt_4mmol ~ Gruppe, data = df)
+d1 <- cohen.d(df$Watt_4mmol ~ df$Gruppe)
+print(t1)
+print(d1)
+
+cat("\n--- Watt/kg ---\n")
+t2 <- t.test(Watt_per_kg ~ Gruppe, data = df)
+d2 <- cohen.d(df$Watt_per_kg ~ df$Gruppe)
+print(t2)
+print(d2)
+
+cat("\n--- % av MAP ---\n")
+t3 <- t.test(Watt_pct_MAP ~ Gruppe, data = df)
+d3 <- cohen.d(df$Watt_pct_MAP ~ df$Gruppe)
+print(t3)
+print(d3)
+
+```
+
+
+```{r}
+
+# Data
+topplaktat <- c(12.06, 13.41, 17.38, 15.05, 11.01, 13.38, 12.57, 15.14, 
+                13.90, 12.39, 15.57, 10.23, 12.71, 9.60, 18.24, 16.41, 15.97)
+
+status <- c("Fullforte", "Fullforte", "Avbrot", "Fullforte", "Avbrot", 
+            "Fullforte", "Fullforte", "Fullforte", "Fullforte", "Avbrot",
+            "Fullforte", "Avbrot", "Avbrot", "Avbrot", "Fullforte", 
+            "Fullforte", "Fullforte")
+
+
+prosent_4mmol_av_topp <- 4 / topplaktat * 100
+
+
+# Resultater per gruppe
+oppsummer <- function(verdier, gruppenavn) {
+  cat("\n", gruppenavn, " (n = ", length(verdier), ")\n", sep = "")
+  cat("Gjennomsnitt +/- SD: ", round(mean(verdier), 1), " +/- ", round(sd(verdier), 1), " %\n", sep = "")
+  cat("Min-maks: ", round(min(verdier), 1), "-", round(max(verdier), 1), " %\n", sep = "")
+}
+
+oppsummer(prosent_4mmol_av_topp, "Totalt")
+oppsummer(prosent_4mmol_av_topp[status == "Fullforte"], "Fullforte")
+oppsummer(prosent_4mmol_av_topp[status == "Avbrot"], "Avbrot")
+
+
+# Welch
+cat("\nWelchs t-test (Fullforte vs Avbrot):\n")
+print(t.test(prosent_4mmol_av_topp ~ status))
+
+```
+
+
+
+
+

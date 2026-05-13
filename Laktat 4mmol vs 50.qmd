@@ -1,0 +1,264 @@
+---
+title: "Laktat 4mmol vs 50%"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+
+library(ggplot2)
+library(dplyr)
+
+# Data 4 mmol
+data_lak_4mmol <- data.frame(
+  FP = c(1,1,1,1,1,1,1, 2,2,2,2,2, 3,3,3,3,3,3,3, 4,4,4,4,4,4,4,
+         5,5,5,5, 6,6,6,6,6,6,6, 7,7,7,7, 8,8,8,8,8,8,8,
+         9,9,9, 10,10,10,10,10, 11,11,11,11,11,11,11, 12,12,12,
+         13,13,13,13,13,13,13, 14,14,14,14,14,14,14, 15,15,15,15,15,15,15,
+         16,16,16,16,16,16,16, 17,17,17,17,17,17,17),
+  Tid = c(8,16,24,32,40,48,56, 8,16,24,32,40, 8,16,24,32,40,48,56, 8,16,24,32,40,48,56,
+          8,16,24,32, 8,16,24,32,40,48,56, 8,16,24,32, 8,16,24,32,40,48,56,
+          8,16,24, 8,16,24,32,40, 8,16,24,32,40,48,56, 8,16,24,
+          8,16,24,32,40,48,56, 8,16,24,32,40,48,56, 8,16,24,32,40,48,56,
+          8,16,24,32,40,48,56, 8,16,24,32,40,48,56),
+  Laktat = c(4.05,5.20,5.91,6.01,7.64,7.11,7.17,
+             3.90,5.55,7.34,8.55,11.60,
+             4.08,4.25,4.62,4.73,5.23,5.73,6.07,
+             3.45,4.21,4.05,5.22,5.40,5.93,5.89,
+             3.37,5.10,5.22,6.37,
+             3.37,3.35,2.95,3.20,3.80,3.39,4.13,
+             3.63,4.28,5.36,5.45,
+             2.14,2.41,3.06,2.66,2.60,3.69,3.88,
+             4.05,4.88,6.13,
+             3.97,4.82,5.19,5.67,5.78,
+             4.06,4.43,5.54,4.62,5.63,5.94,5.90,
+             4.56,6.03,6.41,
+             3.92,4.02,4.85,5.27,4.53,5.31,5.14,
+             2.48,3.06,2.23,2.25,2.92,2.83,4.88,
+             3.93,4.69,4.91,4.89,4.67,4.65,4.63,
+             3.24,3.87,3.93,4.17,4.98,4.24,3.39,
+             3.61,3.75,4.21,4.56,4.74,4.42,4.14),
+  Protokoll = "4 mmol??L?????"
+)
+
+# Data 50%
+data_lak_50pct <- data.frame(
+  FP = c(1,1,1,1, 2,2,2, 3,3, 4,4, 5,5,5, 6,6,6,6, 7,7,
+         8,8,8, 9,9, 10,10,10, 11, 12,12, 13,13,
+         14,14,14,14, 15, 16,16,16, 17,17),
+  Tid = c(8,16,24,32, 8,16,24, 8,16, 8,16, 8,16,24, 8,16,24,32, 8,16,
+          8,16,24, 8,16, 8,16,24, 8, 8,16, 8,16,
+          8,16,24,32, 8, 8,16,24, 8,16),
+  Laktat = c(6.39,7.88,9.19,11.15,
+             4.43,7.19,9.35,
+             7.78,9.09,
+             5.18,8.55,
+             4.18,6.21,8.53,
+             4.98,6.27,6.12,8.25,
+             5.45,7.19,
+             4.62,6.92,8.43,
+             7.40,12.18,
+             5.32,7.09,9.52,
+             8.12,
+             4.51,6.32,
+             6.92,10.57,
+             4.15,4.57,4.84,5.16,
+             10.04,
+             6.21,8.04,9.48,
+             6.86,9.49),
+  Protokoll = "50% av topplaktat"
+)
+
+data_lak <- rbind(data_lak_4mmol, data_lak_50pct)
+
+# 1 min etter testavslutning
+fullforte_fp <- c(1, 3, 4, 6, 8, 11, 13, 14, 15, 16, 17)
+fullforte_lak61 <- c(6.65, 5.63, 5.37, 3.18, 2.92, 5.86, 5.05, 3.04, 4.98, 4.36, 4.17)
+
+data_lak_61 <- data.frame(
+  FP = fullforte_fp,
+  Tid = 61,
+  Laktat = fullforte_lak61,
+  Protokoll = "4 mmol??L?????"
+)
+
+# All data
+data_lak <- rbind(data_lak, data_lak_61)
+data_lak$Protokoll <- factor(data_lak$Protokoll,
+                             levels = c("4 mmol??L?????", "50% av topplaktat"))
+
+# Topplaktat per ut??ver
+topplaktat <- data.frame(
+  FP = 1:17,
+  Topplaktat = c(12.06, 13.41, 17.38, 15.05, 11.01, 13.38, 12.57, 15.14,
+                 13.90, 12.39, 15.57, 10.23, 12.71, 9.60, 18.24, 16.41, 15.97)
+)
+
+# Regn ut % av topplaktat
+data_lak_pct <- data_lak %>%
+  left_join(topplaktat, by = "FP") %>%
+  mutate(Laktat_pct = (Laktat / Topplaktat) * 100)
+
+# Beregn gjennomsnitt og SD
+data_summary_pct <- data_lak_pct %>%
+  group_by(Protokoll, Tid) %>%
+  summarise(
+    Mean = mean(Laktat_pct, na.rm = TRUE),
+    SD = sd(Laktat_pct, na.rm = TRUE),
+    n = sum(!is.na(Laktat_pct)),
+    .groups = "drop"
+  )
+
+# N-labels
+data_labels <- data_summary_pct %>%
+  mutate(y_pos = Mean + SD + 4,
+         label = paste0("n=", n))
+
+# Signifikanstegn ved 24 min p?? begge
+data_signif <- data_summary_pct %>%
+  filter(Tid == 24) %>%
+  mutate(y_pos = Mean + SD + 10)
+
+# Figur
+ggplot(data_summary_pct, aes(x = Tid, y = Mean)) +
+  geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD),
+                width = 1.5, linewidth = 0.5, color = "black") +
+  geom_line(linewidth = 0.8, color = "black") +
+  geom_point(size = 2.5, color = "black") +
+  geom_text(data = data_labels,
+            aes(x = Tid, y = y_pos, label = label),
+            color = "black", size = 2.5) +
+  geom_text(data = data_signif,
+            aes(x = Tid, y = y_pos, label = "*"),
+            color = "black", size = 6) +
+  annotate("segment", x = 0, xend = 61, y = 0, yend = 0, color = "black", linewidth = 0.5) +
+  scale_x_continuous(breaks = c(0, 8, 16, 24, 32, 40, 48, 56, 60, 61), 
+                     labels = c("0", "8", "16", "24", "32", "40", "48", "56", "60", ""),
+                     expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0, 100),
+                     breaks = seq(0, 100, by = 20),
+                     expand = c(0, 0)) +
+  coord_cartesian(xlim = c(0, 63), clip = "off") +
+  facet_wrap(~ Protokoll) +
+  labs(x = "Tid (min)",
+       y = "Laktat (% av topplaktat)") +
+  theme_classic() +
+  theme(axis.line.x.bottom = element_blank(),
+        axis.text.x = element_text(color = "black", size = 7),
+        axis.text.y = element_text(color = "black", size = 9),
+        axis.title = element_text(size = 11),
+        strip.background = element_blank(),
+        strip.text = element_text(size = 11, face = "bold"),
+        panel.spacing = unit(1.5, "lines"))
+
+```
+
+
+```{r}
+
+library(tidyverse)
+library(boot)
+
+# Statistikk for 50 % av topplaktat
+laktat_pct_stat <- data_lak_pct %>%
+  group_by(Protokoll, Tid) %>%
+  summarise(
+    n = sum(!is.na(Laktat_pct)),
+    Mean = mean(Laktat_pct, na.rm = TRUE),
+    SD = sd(Laktat_pct, na.rm = TRUE),
+    CV = SD / Mean * 100,
+    .groups = "drop"
+  )
+
+# Vise resultater
+laktat_pct_stat %>%
+  mutate(across(where(is.numeric), ~ round(., 2))) %>%
+  print(n = 30)
+
+# Sammenligning av CV
+cat("\n--- CV %av topplaktat ---\n")
+laktat_pct_stat %>%
+  select(Protokoll, Tid, CV) %>%
+  pivot_wider(names_from = Protokoll, values_from = CV) %>%
+  print()
+
+# Gjennomsnittlig CV
+cat("\nGjennomsnittlig CV ved tidspunkter 8-32 min:\n")
+laktat_pct_stat %>%
+  filter(Tid %in% c(8, 16, 24)) %>%
+  group_by(Protokoll) %>%
+  summarise(mean_CV = mean(CV, na.rm = TRUE), .groups = "drop") %>%
+  print()
+
+# Ut??vere som har data ved begge protokoller p?? hvert tidspunkt
+parede_utovere <- data_lak_pct %>%
+  group_by(Tid, FP) %>%
+  filter(n_distinct(Protokoll) == 2) %>%
+  ungroup()
+
+# CV for parede ut??vere ved hvert tidspunkt
+laktat_paret_stat <- parede_utovere %>%
+  group_by(Protokoll, Tid) %>%
+  summarise(
+    n = sum(!is.na(Laktat_pct)),
+    Mean = mean(Laktat_pct, na.rm = TRUE),
+    SD = sd(Laktat_pct, na.rm = TRUE),
+    CV = SD / Mean * 100,
+    .groups = "drop"
+  )
+
+cat("\n--- CV for parede utovere ved hvert tidspunkt ---\n")
+laktat_paret_stat %>%
+  mutate(across(where(is.numeric), ~ round(., 2))) %>%
+  print(n = 30)
+
+# Bootstrap-test av CV-forskjell mellom protokoller
+cv_function <- function(data, indices) {
+  d <- data[indices]
+  sd(d, na.rm = TRUE) / mean(d, na.rm = TRUE) * 100
+}
+
+cv_diff_function <- function(data, indices) {
+  d <- data[indices, ]
+  cv_4mmol <- sd(d$Laktat_pct[d$Protokoll == "4 mmol??L?????"], na.rm = TRUE) /
+              mean(d$Laktat_pct[d$Protokoll == "4 mmol??L?????"], na.rm = TRUE) * 100
+  cv_50pct <- sd(d$Laktat_pct[d$Protokoll == "50% av topplaktat"], na.rm = TRUE) /
+              mean(d$Laktat_pct[d$Protokoll == "50% av topplaktat"], na.rm = TRUE) * 100
+  cv_4mmol - cv_50pct
+}
+
+cat("\n\n--- Bootstrap-test av CV-forskjell (parede utovere) ---\n")
+set.seed(42)
+
+for (tid_val in c(8, 16, 24)) {
+  data_t <- parede_utovere %>% filter(Tid == tid_val)
+  
+  if (nrow(data_t) >= 4) {
+    boot_result <- boot(data = data_t, statistic = cv_diff_function, R = 5000)
+    ci <- boot.ci(boot_result, type = "perc")
+    
+    cat(sprintf("\nTid = %d min (n = %d per protokoll)\n", 
+                tid_val, sum(data_t$Protokoll == "4 mmol??L?????")))
+    cat(sprintf("CV-forskjell (4 mmol - 50%%): %.2f %%-poeng\n", boot_result$t0))
+    cat(sprintf("95%% CI: [%.2f, %.2f]\n", ci$percent[4], ci$percent[5]))
+    
+    # Bootstrap p-verdi med sikkerhetssjekk
+    p_boot <- 2 * min(mean(boot_result$t <= 0, na.rm = TRUE), 
+                      mean(boot_result$t >= 0, na.rm = TRUE))
+    
+    if (is.na(p_boot) || p_boot == 0) {
+      cat("Bootstrap p-verdi: < 0.001\n")
+    } else {
+      cat(sprintf("Bootstrap p-verdi: %.3f\n", p_boot))
+    }
+  }
+}
+
+```
+
+
+
+
+
+

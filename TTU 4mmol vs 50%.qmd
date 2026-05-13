@@ -1,0 +1,145 @@
+---
+title: "TTU 4mmol vs 50%"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+
+library(tidyverse)
+library(effsize)
+
+df_sammenligning <- data.frame(
+  FP = 1:17,
+  Watt_4mmol = c(325, 365, 270, 325, 305, 330, 270, 330, 255, 240,
+                 225, 340, 315, 205, 220, 270, 280),
+  TTU_4mmol_sek = c(3600, 2483, 3600, 3600, 2317, 3600, 1937, 3600,
+                    1536, 2518, 3600, 1757, 3600, 3600, 3600, 3600, 3600),
+  Watt_50pst = c(340, 395, 305, 345, 320, 360, 290, 365, 275, 255,
+                 250, 350, 350, 215, 250, 305, 325),
+  TTU_50pst_sek = c(2181, 1844, 1265, 1082, 1634, 1982, 1213, 1839,
+                    976, 1494, 707, 1206, 1085, 2275, 750, 1564, 1200)
+)
+
+df_sammenligning$TTU_4mmol_min <- df_sammenligning$TTU_4mmol_sek / 60
+df_sammenligning$TTU_50pst_min <- df_sammenligning$TTU_50pst_sek / 60
+
+# Alle 17
+cat("ALLE 17 UTOVERE\n")
+cat(sprintf("4 mmol: SD = %.1f min, CV = %.1f %%\n",
+            sd(df_sammenligning$TTU_4mmol_min),
+            sd(df_sammenligning$TTU_4mmol_min)/mean(df_sammenligning$TTU_4mmol_min)*100))
+cat(sprintf("50 prosent: SD = %.1f min, CV = %.1f %%\n",
+            sd(df_sammenligning$TTU_50pst_min),
+            sd(df_sammenligning$TTU_50pst_min)/mean(df_sammenligning$TTU_50pst_min)*100))
+
+# Kun de 6 som avbrot 4 mmol
+cat("\nKUN DE 6 SOM AVBROT 4 MMOL\n")
+df_avbr <- df_sammenligning %>% filter(TTU_4mmol_sek < 3600)
+
+cat(sprintf("4 mmol: %.1f +- %.1f min, CV = %.1f %%\n",
+            mean(df_avbr$TTU_4mmol_min),
+            sd(df_avbr$TTU_4mmol_min),
+            sd(df_avbr$TTU_4mmol_min)/mean(df_avbr$TTU_4mmol_min)*100))
+cat(sprintf("50 prosent: %.1f +- %.1f min, CV = %.1f %%\n",
+            mean(df_avbr$TTU_50pst_min),
+            sd(df_avbr$TTU_50pst_min),
+            sd(df_avbr$TTU_50pst_min)/mean(df_avbr$TTU_50pst_min)*100))
+
+cat("\nDe 6 utoverne som avbrot 4 mmol:\n")
+print(df_avbr %>% select(FP, TTU_4mmol_min, TTU_50pst_min))
+
+```
+
+```{r}
+
+library(tidyverse)
+library(boot)
+
+df_sammenligning <- data.frame(
+  FP = 1:17,
+  Watt_4mmol = c(325, 365, 270, 325, 305, 330, 270, 330, 255, 240,
+                 225, 340, 315, 205, 220, 270, 280),
+  TTU_4mmol_sek = c(3600, 2483, 3600, 3600, 2317, 3600, 1937, 3600,
+                    1536, 2518, 3600, 1757, 3600, 3600, 3600, 3600, 3600),
+  Watt_50pst = c(340, 395, 305, 345, 320, 360, 290, 365, 275, 255,
+                 250, 350, 350, 215, 250, 305, 325),
+  TTU_50pst_sek = c(2181, 1844, 1265, 1082, 1634, 1982, 1213, 1839,
+                    976, 1494, 707, 1206, 1085, 2275, 750, 1564, 1200)
+)
+
+df_sammenligning$TTU_4mmol_min <- df_sammenligning$TTU_4mmol_sek / 60
+df_sammenligning$TTU_50pst_min <- df_sammenligning$TTU_50pst_sek / 60
+
+# Alle 17
+cat("ALLE 17 UTOVERE\n")
+cat(sprintf("4 mmol: %.1f +- %.1f min, CV = %.1f %%\n",
+            mean(df_sammenligning$TTU_4mmol_min),
+            sd(df_sammenligning$TTU_4mmol_min),
+            sd(df_sammenligning$TTU_4mmol_min)/mean(df_sammenligning$TTU_4mmol_min)*100))
+cat(sprintf("50 prosent: %.1f +- %.1f min, CV = %.1f %%\n",
+            mean(df_sammenligning$TTU_50pst_min),
+            sd(df_sammenligning$TTU_50pst_min),
+            sd(df_sammenligning$TTU_50pst_min)/mean(df_sammenligning$TTU_50pst_min)*100))
+
+# 6 som avbrot 4 mmol
+cat("\nKUN DE 6 SOM AVBROT 4 MMOL\n")
+df_avbr <- df_sammenligning %>% filter(TTU_4mmol_sek < 3600)
+cat(sprintf("4 mmol: %.1f +- %.1f min, CV = %.1f %%\n",
+            mean(df_avbr$TTU_4mmol_min),
+            sd(df_avbr$TTU_4mmol_min),
+            sd(df_avbr$TTU_4mmol_min)/mean(df_avbr$TTU_4mmol_min)*100))
+cat(sprintf("50 prosent: %.1f +- %.1f min, CV = %.1f %%\n",
+            mean(df_avbr$TTU_50pst_min),
+            sd(df_avbr$TTU_50pst_min),
+            sd(df_avbr$TTU_50pst_min)/mean(df_avbr$TTU_50pst_min)*100))
+
+cat("\nDe 6 utoverne som avbrot 4 mmol:\n")
+print(df_avbr %>% select(FP, TTU_4mmol_min, TTU_50pst_min))
+
+# Bootstrap-test av CV-forskjell for TTU
+cv_diff_ttu <- function(data, indices) {
+  d <- data[indices, ]
+  cv_4mmol <- sd(d$TTU_4mmol_min, na.rm = TRUE) / mean(d$TTU_4mmol_min, na.rm = TRUE) * 100
+  cv_50pct <- sd(d$TTU_50pst_min, na.rm = TRUE) / mean(d$TTU_50pst_min, na.rm = TRUE) * 100
+  cv_4mmol - cv_50pct
+}
+
+cat("\n\n--- Bootstrap-test av CV-forskjell for TTU ---\n")
+set.seed(42)
+
+# Alle 17
+cat("\nALLE 17 UTOVERE\n")
+boot_alle <- boot(data = df_sammenligning, statistic = cv_diff_ttu, R = 5000)
+ci_alle <- boot.ci(boot_alle, type = "perc")
+cat(sprintf("CV-forskjell (4 mmol - 50%%): %.2f %%-poeng\n", boot_alle$t0))
+cat(sprintf("95%% CI: [%.2f, %.2f]\n", ci_alle$percent[4], ci_alle$percent[5]))
+p_alle <- 2 * min(mean(boot_alle$t <= 0, na.rm = TRUE), 
+                  mean(boot_alle$t >= 0, na.rm = TRUE))
+if (is.na(p_alle) || p_alle == 0) {
+  cat("Bootstrap p-verdi: < 0.001\n")
+} else {
+  cat(sprintf("Bootstrap p-verdi: %.3f\n", p_alle))
+}
+
+# 6 som avbrot
+cat("\nKUN DE 6 SOM AVBROT 4 MMOL\n")
+boot_avbr <- boot(data = df_avbr, statistic = cv_diff_ttu, R = 5000)
+ci_avbr <- boot.ci(boot_avbr, type = "perc")
+cat(sprintf("CV-forskjell (4 mmol - 50%%): %.2f %%-poeng\n", boot_avbr$t0))
+cat(sprintf("95%% CI: [%.2f, %.2f]\n", ci_avbr$percent[4], ci_avbr$percent[5]))
+p_avbr <- 2 * min(mean(boot_avbr$t <= 0, na.rm = TRUE), 
+                  mean(boot_avbr$t >= 0, na.rm = TRUE))
+if (is.na(p_avbr) || p_avbr == 0) {
+  cat("Bootstrap p-verdi: < 0.001\n")
+} else {
+  cat(sprintf("Bootstrap p-verdi: %.3f\n", p_avbr))
+}
+
+```
+
+
+
+
+
