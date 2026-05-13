@@ -1,0 +1,65 @@
+---
+title: "Kartleggingsdag"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+
+library(ggplot2)
+
+# Belastning over tid
+t1 <- data.frame(
+  tid = c(
+    0, 5, 10, 15, 20, 22,                               
+    32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,            
+    62, 64, 64.001                                          
+  ),
+  watt = c(
+    175, 225, 275, 325, 325, 0,
+    200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 0,
+    450, 450, 0
+  )
+)
+
+# LaktatmC%linger etter 2-min
+laktat <- data.frame(
+  tid = c(65, 67, 69, 71, 73)
+)
+
+ggplot() +
+  geom_step(data = t1, aes(x = tid, y = watt), linewidth = 1.2) +
+
+  geom_segment(data = laktat,
+               aes(x = tid, xend = tid, y = 0, yend = 25),
+               color = "black", linewidth = 0.5) +
+  
+  geom_point(data = laktat, aes(x = tid, y = 25),
+             color = "red", size = 1.8) +
+  annotate("text", x = 11, y = 360, label = "Laktatprofil", size = 4) +
+  annotate("text", x = 37, y = 460, label = expression(VO[2]*"maks"), size = 4) +
+  annotate("text", x = 63, y = 480, label = "2-min", size = 4) +
+  annotate("text", x = 27, y = 60, label = "10 min\npause", size = 3) +
+  annotate("text", x = 52, y = 60, label = "20 min\npause", size = 3) +
+  annotate("text", x = 69, y = 80, label = "Laktat-\nm\u00E5linger", size = 3) +
+  scale_x_continuous(
+    breaks = seq(0, 75, by = 5),
+    limits = c(0, 76),
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(
+    breaks = seq(0, 500, by = 100),
+    limits = c(0, 500),
+    expand = c(0, 0)
+  ) +
+  labs(
+    x = "Tid (min)",
+    y = "Belastning (W)"
+  ) +
+  theme_classic(base_size = 12)
+
+```
+
+
+
