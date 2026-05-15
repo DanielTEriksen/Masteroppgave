@@ -1,0 +1,235 @@
+---
+title: "Utvikling HF 4mmol"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+
+library(ggplot2)
+library(dplyr)
+# Data
+data3 <- data.frame(
+  FP = c(
+    1,1,1,1,1,1,1,1,
+    2,2,2,2,2,
+    3,3,3,3,3,3,3,3,
+    4,4,4,4,4,4,4,4,
+    5,5,5,5,
+    6,6,6,6,6,6,6,6,
+    7,7,7,7,
+    8,8,8,8,8,8,8,8,
+    9,9,9,
+    10,10,10,10,10,
+    11,11,11,11,11,11,11,11,
+    12,12,12,
+    13,13,13,13,13,13,13,13,
+    14,14,14,14,14,14,14,14,
+    15,15,15,15,15,15,15,15,
+    16,16,16,16,16,16,16,16,
+    17,17,17,17,17,17,17,17
+  ),
+  Tid = c(
+    8,16,24,32,40,48,56,60,
+    8,16,24,32,40,
+    8,16,24,32,40,48,56,60,
+    8,16,24,32,40,48,56,60,
+    8,16,24,32,
+    8,16,24,32,40,48,56,60,
+    8,16,24,32,
+    8,16,24,32,40,48,56,60,
+    8,16,24,
+    8,16,24,32,40,
+    8,16,24,32,40,48,56,60,
+    8,16,24,
+    8,16,24,32,40,48,56,60,
+    8,16,24,32,40,48,56,60,
+    8,16,24,32,40,48,56,60,
+    8,16,24,32,40,48,56,60,
+    8,16,24,32,40,48,56,60
+  ),
+  HRmax_prosent = c(
+    91.50,92.50,93.00,93.50,94.00,95.50,95.50,94.50,
+    87.05,89.12,89.64,90.67,92.75,
+    85.93,87.94,88.44,89.45,89.95,90.45,90.45,89.95,
+    88.83,89.85,89.85,91.37,91.88,91.88,92.39,91.37,
+    88.14,91.24,93.30,94.85,
+    89.39,89.39,92.18,92.74,92.18,92.18,93.30,91.62,
+    91.35,94.59,94.59,95.14,
+    85.58,87.02,87.98,89.42,90.87,92.31,91.83,91.35,
+    91.30,92.75,94.20,
+    91.62,93.19,94.24,94.24,94.24,
+    89.60,92.08,94.06,95.05,95.54,95.54,96.04,95.05,
+    92.67,94.24,95.29,
+    82.32,83.84,84.85,86.87,86.87,87.37,88.38,88.38,
+    87.10,88.17,88.71,89.25,90.86,91.40,91.94,92.47,
+    89.69,92.27,92.27,93.81,93.81,93.30,93.81,93.30,
+    85.07,86.57,86.57,87.06,87.06,86.07,86.57,87.56,
+    91.10,92.15,91.10,92.67,94.24,95.29,95.29,94.76
+  ),
+  Gruppe = c(
+    rep("Fullforte", 8),
+    rep("Avbrot", 5),
+    rep("Fullforte", 8),
+    rep("Fullforte", 8),
+    rep("Avbrot", 4),
+    rep("Fullforte", 8),
+    rep("Avbrot", 4),
+    rep("Fullforte", 8),
+    rep("Avbrot", 3),
+    rep("Avbrot", 5),
+    rep("Fullforte", 8),
+    rep("Avbrot", 3),
+    rep("Fullforte", 8),
+    rep("Fullforte", 8),
+    rep("Fullforte", 8),
+    rep("Fullforte", 8),
+    rep("Fullforte", 8)
+  )
+)
+data3$Gruppe <- factor(data3$Gruppe, levels = c("Fullforte", "Avbrot"))
+# Oppsummering
+df_summary_hr <- data3 %>%
+  group_by(Gruppe, Tid) %>%
+  summarise(
+    mean_hr = mean(HRmax_prosent, na.rm = TRUE),
+    sd_hr   = sd(HRmax_prosent, na.rm = TRUE),
+    n       = n(),
+    .groups = "drop"
+  )
+# N-verdier for avbr??t
+df_n_avbrot_hr <- df_summary_hr %>%
+  filter(Gruppe == "Avbrot") %>%
+  mutate(y_pos = mean_hr + sd_hr + 0.7,
+         label = paste0("n=", n))
+# Signifikanstegn
+df_signif_hr <- df_summary_hr %>%
+  filter(Gruppe == "Avbrot", Tid %in% c(16, 24)) %>%
+  mutate(y_pos = mean_hr + sd_hr + 1.7)
+# Figur
+ggplot(df_summary_hr, aes(x = Tid, y = mean_hr, color = Gruppe, group = Gruppe)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean_hr - sd_hr,
+                    ymax = mean_hr + sd_hr),
+                width = 1.5, linewidth = 0.8) +
+  geom_text(data = df_n_avbrot_hr,
+            aes(x = Tid, y = y_pos, label = label),
+            color = "#990000", size = 3.5, show.legend = FALSE) +
+  geom_text(data = df_signif_hr,
+            aes(x = Tid, y = y_pos, label = "*"),
+            color = "black", size = 6, show.legend = FALSE) +
+  annotate("segment", x = 0, xend = 60, y = 80, yend = 80, color = "black", linewidth = 0.5) +
+  scale_color_manual(
+    values = c("Fullforte" = "#003366", "Avbrot" = "#990000"),
+    labels = c("Fullf\u00F8rte", "Avbr\u00F8t")
+  ) +
+  scale_x_continuous(
+    breaks = c(0, 8, 16, 24, 32, 40, 48, 56, 60),
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(
+    limits = c(80, 100),
+    breaks = seq(80, 100, by = 2),
+    expand = c(0, 0)
+  ) +
+  coord_cartesian(xlim = c(0, 62), clip = "off") +
+  labs(
+    x = "Tid (min)",
+    y = "%HFmaks",
+    color = NULL
+  ) +
+  theme_classic(base_size = 14, base_family = "Arial") +
+  theme(
+    axis.line.x.bottom = element_blank(),
+    axis.line.y.right = element_blank(),
+    axis.text.y.right = element_blank(),
+    axis.ticks.y.right = element_blank(),
+    legend.position = "top",
+    plot.margin = margin(t = 10, r = 30, b = 10, l = 10)
+  )
+
+```
+
+
+```{r}
+
+library(tidyverse)
+library(effsize)
+
+df_hr <- data3 %>% rename(Laktat = HRmax_prosent)
+
+# Oppsummering
+df_hr_summary <- df_hr %>%
+  group_by(Gruppe, Tid) %>%
+  summarise(
+    mean_hr = mean(Laktat, na.rm = TRUE),
+    sd_hr   = sd(Laktat, na.rm = TRUE),
+    n       = n(),
+    .groups = "drop"
+  )
+print(df_hr_summary, n = 30)
+
+df_hr %>% distinct(FP, Gruppe) %>% count(Gruppe)
+
+df_stat_hr <- df_hr %>% filter(Tid %in% c(8, 16, 24))
+
+# HFmaks ved testavslutning
+df_avslutning <- data.frame(
+  FP = 1:17,
+  HFmaks_avslutning = c(94.50, 92.23, 89.95, 91.37, 95.36, 91.62, 95.14, 
+                        91.35, 95.17, 94.24, 95.05, 95.81, 88.38, 92.47, 
+                        93.30, 87.56, 94.76),
+  Gruppe = factor(c("Fullforte","Avbrot","Fullforte","Fullforte","Avbrot",
+                    "Fullforte","Avbrot","Fullforte","Avbrot","Avbrot",
+                    "Fullforte","Avbrot","Fullforte","Fullforte","Fullforte",
+                    "Fullforte","Fullforte"),
+                  levels = c("Fullforte","Avbrot"))
+)
+
+# Vis deskriptiv statistikk per gruppe
+df_avslutning %>%
+  group_by(Gruppe) %>%
+  summarise(
+    n = n(),
+    mean = mean(HFmaks_avslutning),
+    sd = sd(HFmaks_avslutning)
+  )
+
+# Welch's t-test
+t.test(HFmaks_avslutning ~ Gruppe, data = df_avslutning, var.equal = FALSE)
+
+# Cohen's d
+cohen.d(HFmaks_avslutning ~ Gruppe, data = df_avslutning)
+
+# T-test og deskriptiv statistikk per tidspunkt
+resultater_hr <- df_stat_hr %>%
+  group_by(Tid) %>%
+  summarise(
+    n_fullf      = sum(Gruppe == "Fullforte"),
+    n_avbr       = sum(Gruppe == "Avbrot"),
+    mean_fullf   = mean(Laktat[Gruppe == "Fullforte"]),
+    sd_fullf     = sd(Laktat[Gruppe == "Fullforte"]),
+    mean_avbr    = mean(Laktat[Gruppe == "Avbrot"]),
+    sd_avbr      = sd(Laktat[Gruppe == "Avbrot"]),
+    diff         = mean_avbr - mean_fullf,
+    t_stat       = t.test(Laktat ~ Gruppe, var.equal = FALSE)$statistic,
+    df_welch     = t.test(Laktat ~ Gruppe, var.equal = FALSE)$parameter,
+    p_value      = t.test(Laktat ~ Gruppe, var.equal = FALSE)$p.value,
+    cohens_d     = cohen.d(Laktat ~ Gruppe, data = cur_data())$estimate,
+    .groups = "drop"
+  )
+
+# Vise resultater
+resultater_hr %>%
+  mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  print(width = Inf)
+
+print(df_hr_summary, n = 30)
+
+```
+
+
+
+
